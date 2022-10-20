@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PhysicsObject : MonoBehaviour
 {
     // The gravity modifier affecting the gameObject
@@ -37,12 +38,8 @@ public class PhysicsObject : MonoBehaviour
 
     private void Start()
     {
-        // Don't check collisions against triggers
-        _contactFilter.useTriggers = false;
-        // Sets the layer mask filter property of the gameObject
-        _contactFilter.SetLayerMask(Physics2D.GetLayerCollisionMask(gameObject.layer));
-        // Enables filtering the contact results by layer mask
-        _contactFilter.useLayerMask = true;
+        // Set up _contactFilter
+        SetUpContactFilter();
     }
 
     private void Update()
@@ -58,30 +55,71 @@ public class PhysicsObject : MonoBehaviour
         // _isGrounded is considered false until a collision has registered in the frame
         _isGrounded = false;
         
+        // Update the velocity
+        UpdateVelocity();
+
+        // Get the movement in x-direction
+        Vector2 movement = GetXMovement();
+        // Handle movement in the x-direction
+        Move(movement, false);
+        
+        // Get the movement in y-direction
+        movement = GetYMovement();
+        // Handle movement in the y-direction
+        Move(movement, true);
+    }
+    
+    // Updates the velocity of the current frame
+    private void UpdateVelocity()
+    {
         // Add gravity to _velocity
         _velocity += Physics2D.gravity * (gravityModifier * Time.deltaTime);
         // Add user input to x-component of _velocity
         _velocity.x = _targetVelocity.x;
+    }
 
+    // Returns the movement vector2 in the x-direction
+    private Vector2 GetXMovement()
+    {
+        // Calculate the movement in x-direction
+        return GetGroundDirection() * GetDeltaPosition().x;
+    }
+
+    // Returns the movement vector2 in the y-direction
+    private Vector2 GetYMovement()
+    {
+        // Calculate the movement in y-direction
+        return Vector2.up * GetDeltaPosition().y;
+    }
+
+    // Sets the needed properties for _contactFilter
+    private void SetUpContactFilter()
+    {
+        // Don't check collisions against triggers
+        _contactFilter.useTriggers = false;
+        // Sets the layer mask filter property of the gameObject
+        _contactFilter.SetLayerMask(Physics2D.GetLayerCollisionMask(gameObject.layer));
+        // Enables filtering the contact results by layer mask
+        _contactFilter.useLayerMask = true;
+    }
+    
+    // Returns the position delta
+    private Vector2 GetDeltaPosition()
+    {
         // Calculate the position delta
-        Vector2 deltaPosition = _velocity * Time.deltaTime;
-        // Store the direction to move along the ground (perpendicular to _groundNormal)
-        Vector2 moveAlongGround = new Vector2(_groundNormal.y, -_groundNormal.x);
+        return _velocity * Time.deltaTime;
+    }
 
-        // Calculate the x movement direction
-        Vector2 movement = moveAlongGround * deltaPosition.x;
-        // Handle movement in the x-direction
-        Move(movement, false);
-        
-        // Calculate the y movement direction
-        movement = Vector2.up * deltaPosition.y;
-        // Handle movement in the y-direction
-        Move(movement, true);
+    // Returns the direction to move along the ground
+    private Vector2 GetGroundDirection()
+    {
+        // Return the direction to move along the ground (perpendicular to _groundNormal)
+        return new Vector2(_groundNormal.y, -_groundNormal.x);
     }
 
     // Movement in the x-direction and in the y-direction will be addressed in separate function calls,
     // handling slopes is easier by handling the x-direction first then the y-direction
-    void Move(Vector2 movement, bool isYMovement)
+    private void Move(Vector2 movement, bool isYMovement)
     {
         float distance = movement.magnitude;
 
@@ -133,6 +171,7 @@ public class PhysicsObject : MonoBehaviour
         _rigidbody.position += movement.normalized * distance;
     }
 
+    // To be implemented in child class
     protected virtual void ComputeVelocity()
     {
         
