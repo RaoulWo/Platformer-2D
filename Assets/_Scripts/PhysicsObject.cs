@@ -23,8 +23,10 @@ public class PhysicsObject : MonoBehaviour
     protected RaycastHit2D[] _hitBuffer = new RaycastHit2D[16];
     // The list holding only the raycast hit 2D objects that collided with the ray cast
     protected List<RaycastHit2D> _hitBufferList = new List<RaycastHit2D>(16);
-    // The boolean to determine whether the player is grounded or not
+    // The boolean to determine whether the gameObject is grounded or not
     protected bool _isGrounded;
+    // The boolean which determines if player can still air dash or not
+    protected bool _canAirDash;
 
     // The minimum move distance in order to update position
     protected const float _minMoveDistance = 0.001f;
@@ -68,6 +70,17 @@ public class PhysicsObject : MonoBehaviour
         // Handle movement in the y-direction
         Move(movement, true);
     }
+
+    // Sets the needed properties for _contactFilter
+    private void SetUpContactFilter()
+    {
+        // Don't check collisions against triggers
+        _contactFilter.useTriggers = false;
+        // Sets the layer mask filter property of the gameObject
+        _contactFilter.SetLayerMask(Physics2D.GetLayerCollisionMask(gameObject.layer));
+        // Enables filtering the contact results by layer mask
+        _contactFilter.useLayerMask = true;
+    }
     
     // Updates the velocity of the current frame
     private void UpdateVelocity()
@@ -92,17 +105,6 @@ public class PhysicsObject : MonoBehaviour
         return Vector2.up * GetDeltaPosition().y;
     }
 
-    // Sets the needed properties for _contactFilter
-    private void SetUpContactFilter()
-    {
-        // Don't check collisions against triggers
-        _contactFilter.useTriggers = false;
-        // Sets the layer mask filter property of the gameObject
-        _contactFilter.SetLayerMask(Physics2D.GetLayerCollisionMask(gameObject.layer));
-        // Enables filtering the contact results by layer mask
-        _contactFilter.useLayerMask = true;
-    }
-    
     // Returns the position delta
     private Vector2 GetDeltaPosition()
     {
@@ -144,7 +146,10 @@ public class PhysicsObject : MonoBehaviour
                 Vector2 currentNormal = _hitBufferList[i].normal;
                 if (currentNormal.y > minGroundNormalY)
                 {
+                    // PhysicsObject is grounded
                     _isGrounded = true;
+                    // Reset _canAirDash when grounded
+                    _canAirDash = true;
 
                     if (isYMovement)
                     {

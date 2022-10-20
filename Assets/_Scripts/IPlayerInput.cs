@@ -11,4 +11,7 @@
     
     // The property for when the jump button is released
     public bool JumpButtonUp { get; }
+    
+    // The property for when the dash button is pressed down
+    public bool DashButtonDown { get; }
 }

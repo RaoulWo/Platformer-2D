@@ -6,4 +6,5 @@ public class PlayerInput : IPlayerInput
     public float Horizontal => Input.GetAxis("Horizontal");
     public bool JumpButtonDown => Input.GetButtonDown("Jump");
     public bool JumpButtonUp => Input.GetButtonUp("Jump");
+    public bool DashButtonDown => Input.GetKeyDown(KeyCode.X);
 }
